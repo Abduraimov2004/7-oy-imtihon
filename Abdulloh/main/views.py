@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product, Category, Comment
+from .book import Book
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
@@ -65,6 +66,23 @@ def product_detail(request, product_id):
     })
 
 
+def add_comment(request, product_id):
+    if request.method == 'POST':
+        product = get_object_or_404(Product, id=product_id)
+        text = request.POST.get('text')
+        rating = request.POST.get('rating')
+        user = request.user
+
+        Comment.objects.create(
+            product=product,
+            user=user,
+            text=text,
+            rating=rating
+        )
+        return redirect('product_detail', product_id=product.id)
+
+
+
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -84,6 +102,7 @@ def login_view(request):
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
+
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             user = authenticate(username=username, password=password)
@@ -111,19 +130,3 @@ def logout_view(request):
 @login_required
 def account_view(request):
     return render(request, 'account.html')
-
-
-def add_comment(request, product_id):
-    if request.method == 'POST':
-        product = get_object_or_404(Product, id=product_id)
-        text = request.POST.get('text')
-        rating = request.POST.get('rating')
-        user = request.user
-
-        Comment.objects.create(
-            product=product,
-            user=user,
-            text=text,
-            rating=rating
-        )
-        return redirect('product_detail', product_id=product.id)
